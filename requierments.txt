@@ -1,6 +1,0 @@
-tweepy
-openai
-langchain
-langchain_community
-langchain-openai
-selenium==4.15.2

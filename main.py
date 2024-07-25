@@ -1,4 +1,4 @@
-from langchain import OpenAI
+from langchain_community.chat_models import ChatOpenAI
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationBufferMemory
 from tempfile import mkdtemp
@@ -8,9 +8,7 @@ from selenium.webdriver.common.by import By
 import re
 import os
 import tweepy
-import json
 import random
-import json
 import boto3
 
 def extract_braced_content(text):
@@ -33,21 +31,36 @@ def make_post(theme, openai_api_key):
     # API Key 設定
     os.environ["OPENAI_API_KEY"] = openai_api_key
 
-    llm = OpenAI()
+    llm = ChatOpenAI(model_name="gpt-4o")
     
     memory = ConversationBufferMemory(return_messages=True)
     conversation = ConversationChain(llm=llm, memory=memory)
 
-    command = "以下のテーマからSNSに投稿する文章を、条件をもとに作成してください。\n（テーマ）"+ theme + "\n（条件）\n・'。'ごとに改行を２回する。\n・2文以内 \n"
+    command = f"""以下のテーマからSNSに投稿する文章を、条件をもとに作成してください。
+    （テーマ）{theme[0]}
+    （条件）
+    ・3文以内。かつ140文字以内。
+    ・exclamation mark'！'とquestion mark'？'を2回連続して使用してはいけない。
+    ・最初に読者の注意を引きつけるために、興味深いまたは挑戦的な質問を投げかけたり、興味を引く事実を提供する。
+    ・ユーザーの共感を得るような、文章にする。
+    """
+
     conversation.predict(input=command)
 
-    command = "作成した文章をもとに、インプレッション数を2倍にするような文章に書き直してください。"
+    command = """作成した文章をもとに、インプレッション数を大幅に上げるように、文章をブラッシュアップしてください。
+    出力は、文章のみを出力してください。"""
 
-    command = "先ほど生成した文章を、鍵括弧「」で囲んで出力してください。あなたの言葉は必要ありません。"
     a = conversation.predict(input=command)
-    print(a)
-    res = extract_braced_content(a)[0]
-    return(res[:140])
+    a = re.sub(r'。(?!\n\n)', '。\n\n', a)
+    a = re.sub(r'？(?!\n\n)', '？\n\n', a)
+    a = re.sub(r'！(?!\n\n)', '！\n\n', a)
+
+    command = "上の文章に合わせて、ハッシュタグを作成してください。出力は、作成したハッシュタグのみを出力してください。"
+    
+    tag = conversation.predict(input = command)
+
+    res = a + tag + "\n\n" + theme[1]
+    return(res)
 
 def get_theme():
     options = webdriver.ChromeOptions()
@@ -73,7 +86,10 @@ def get_theme():
 
     themes = []
     for element in news_elements:
-        themes.append(element.text.split("\n")[0])
+        theme = element.text.split("\n")[0]
+        url = element.get_attribute("href")
+        themes.append((theme, url))
+
     driver.quit()
     
     return(themes)
