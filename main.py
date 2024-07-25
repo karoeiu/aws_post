@@ -9,12 +9,8 @@ import re
 import os
 import tweepy
 import random
+import json
 import boto3
-
-def extract_braced_content(text):
-    pattern = r"「([^」]*)」"
-    matches = re.findall(pattern, text)
-    return matches
 
 def post(text, consumer_key, consumer_secret, access_token, access_token_secret):
     
