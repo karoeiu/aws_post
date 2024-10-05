@@ -21,7 +21,6 @@ def post(text, consumer_key, consumer_secret, access_token, access_token_secret)
         access_token_secret=access_token_secret
     )
     client.create_tweet(text=text)
-    print("posted your message!")
 
 def make_post(theme, openai_api_key):
     # API Key 設定
@@ -32,13 +31,14 @@ def make_post(theme, openai_api_key):
     memory = ConversationBufferMemory(return_messages=True)
     conversation = ConversationChain(llm=llm, memory=memory)
 
-    command = f"""以下のテーマからSNSに投稿する文章を、条件をもとに作成してください。
+    command = f"""以下のテーマをSNSで解説する文章を、条件をもとに作成してください。
     （テーマ）{theme[0]}
     （条件）
     ・3文以内。かつ140文字以内。
     ・exclamation mark'！'とquestion mark'？'を2回連続して使用してはいけない。
-    ・最初に読者の注意を引きつけるために、興味深いまたは挑戦的な質問を投げかけたり、興味を引く事実を提供する。
+    ・最初に読者の注意を引きつけるために、興味を引く事実を提供する。
     ・ユーザーの共感を得るような、文章にする。
+    ・情報倫理に注意する。例えば、センシティブな内容（戦争、病気、死...）に関しては、落ち着いた文章にする。
     """
 
     conversation.predict(input=command)
@@ -62,7 +62,7 @@ def get_theme():
     options = webdriver.ChromeOptions()
     service = webdriver.ChromeService("/opt/chromedriver")
     options.binary_location = '/opt/chrome/chrome'
-    options.add_argument("--headless=new")
+    options.add_argument("--headless")
     options.add_argument('--no-sandbox')
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1280x1696")
@@ -91,7 +91,7 @@ def get_theme():
     return(themes)
 
 def handler(event, context):
-    ssm_client = ssm_client = boto3.client('ssm')
+    ssm_client = boto3.client('ssm')
     response = ssm_client.get_parameter(
         Name='/credential/APIkey',
         WithDecryption=True
@@ -107,3 +107,8 @@ def handler(event, context):
     text = make_post(theme, openai_api_key)
     post(text, consumer_key=consumer_key, consumer_secret=consumer_secret,
          access_token=access_token, access_token_secret=access_token_secret)
+    
+    return {
+        'statusCode': 200,
+        'body': "posted your message!"
+    }
