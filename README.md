@@ -102,7 +102,7 @@ dockerimageの作成 → AWS ECR にimageをpushするためのタグをdockerim
 
 ## 6.今後の構想
 - このシステムをwebアプリ化できないか構想中。
-- 現時点でできているデモ動画(EC2で動かしている)
+- 現時点でできているデモ動画(EC2で動作中)
   - [https://drive.google.com/file/d/1oi_m5MMjQK-CoLNJy5gTds0N789NCYyk/view?usp=sharing](https://drive.google.com/file/d/1oi_m5MMjQK-CoLNJy5gTds0N789NCYyk/view?usp=sharing)
 - やりたいこと
   - 実行終了した後、自動で画面遷移させたい。
